@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#080808">
+<title>Mohamed Darwish — 3D VFX Artist</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   RESET & TOKENS
+══════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#080808;--bg2:#0f0f0f;--bg3:#141414;--surface:#1a1a1a;
+  --border:rgba(255,255,255,0.07);--text:#f0ede8;
+  --muted:rgba(240,237,232,0.38);--dim:rgba(240,237,232,0.18);
+  --accent:#e8d5a3;--accent2:#c4a96b;
+  --fd:'Syne',sans-serif;--fb:'Inter',sans-serif;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px);
+  --safe-r:env(safe-area-inset-right,0px);
+}
+html{background:var(--bg);height:100%}
+body{
+  font-family:var(--fb);background:var(--bg);color:var(--text);
+  overflow-x:hidden;cursor:none;-webkit-font-smoothing:antialiased;
+}
+
+/* ══════════════════════════════════════
+   CURSOR — desktop only
+══════════════════════════════════════ */
+.cur-dot{
+  position:fixed;width:6px;height:6px;background:#fff;border-radius:50%;
+  pointer-events:none;z-index:9999;transform:translate(-50%,-50%);
+  transition:width .15s,height .15s;
+}
+.cur-ring{
+  position:fixed;width:38px;height:38px;border:1px solid rgba(255,255,255,0.22);
+  border-radius:50%;pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);transition:width .2s,height .2s,border-color .2s;
+}
+
+/* ══════════════════════════════════════
+   INTRO SCREEN
+══════════════════════════════════════ */
+#intro-screen{
+  position:fixed;inset:0;z-index:10000;background:#000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;touch-action:manipulation;
+}
+#intro-screen video{
+  width:100%;height:100%;object-fit:cover;position:absolute;inset:0;
+}
+#intro-screen .intro-overlay{
+  position:relative;z-index:2;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:1.6rem;
+  padding-bottom:calc(var(--safe-bot) + 2rem);
+}
+.intro-click-hint{
+  font-family:var(--fd);font-size:.75rem;font-weight:500;
+  letter-spacing:.32em;text-transform:uppercase;
+  color:rgba(255,255,255,0.6);
+  animation:intro-pulse 2s ease-in-out infinite;
+}
+.intro-ring{
+  width:68px;height:68px;border:1px solid rgba(255,255,255,0.25);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  animation:intro-pulse 2s ease-in-out infinite;
+}
+.intro-ring svg{opacity:.6}
+#intro-screen.leaving{animation:intro-fade-out .9s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes intro-pulse{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes intro-fade-out{to{opacity:0;transform:scale(1.04)}}
+
+/* ══════════════════════════════════════
+   NAV
+══════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1.5rem 2.4rem;
+  padding-top:calc(var(--safe-top) + 1.2rem);
+  background:linear-gradient(to bottom,rgba(8,8,8,0.95),transparent);
+  pointer-events:none;
+}
+nav a,nav button{pointer-events:all}
+.nav-logo{
+  font-family:var(--fd);font-size:.85rem;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;
+  color:var(--text);text-decoration:none;
+}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{
+  font-size:.68rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);text-decoration:none;transition:color .2s;
+  padding:.3rem 0;
+}
+.nav-links a:hover{color:var(--text)}
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+#hero{
+  min-height:100svh;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:0 2.4rem 4.5rem;
+  padding-bottom:calc(4.5rem + var(--safe-bot));
+  position:relative;overflow:hidden;
+}
+.hero-grid{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.022) 1px,transparent 1px);
+  background-size:80px 80px;
+  mask-image:radial-gradient(ellipse at center,black 0%,transparent 68%);
+}
+.hero-eye{
+  font-size:.65rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--accent2);margin-bottom:1rem;
+  opacity:0;transform:translateY(14px);animation:up .7s .3s forwards;
+}
+.hero-name{
+  font-family:var(--fd);font-size:clamp(3.2rem,14vw,8.5rem);
+  font-weight:800;line-height:.9;letter-spacing:-.01em;
+  opacity:0;transform:translateY(26px);animation:up .9s .5s forwards;
+}
+.hero-name .ghost{color:transparent;-webkit-text-stroke:1px rgba(240,237,232,0.28)}
+.hero-sub{
+  display:flex;flex-direction:column;gap:1.6rem;align-items:flex-start;
+  margin-top:2.4rem;opacity:0;transform:translateY(14px);animation:up .75s .85s forwards;
+}
+.hero-role{font-size:.88rem;font-weight:300;line-height:1.8;color:var(--muted)}
+.hero-role strong{color:var(--text);font-weight:500}
+.hero-cta{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-size:.68rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text);text-decoration:none;border:1px solid var(--border);
+  padding:.85rem 1.6rem;transition:background .22s,border-color .22s;
+  touch-action:manipulation;
+}
+.hero-cta:hover{background:var(--surface);border-color:rgba(255,255,255,0.14)}
+.scroll-hint{
+  position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  opacity:0;animation:fi 1s 1.3s forwards;
+}
+.scroll-hint span{font-size:.58rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.scroll-tick{width:1px;height:36px;background:linear-gradient(to bottom,rgba(255,255,255,0.4),transparent);animation:tick 1.8s 1.5s infinite}
+
+/* ══════════════════════════════════════
+   MARQUEE
+══════════════════════════════════════ */
+.mq-wrap{
+  overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:.85rem 0;background:var(--bg2);
+}
+.mq-track{
+  display:flex;gap:2.2rem;white-space:nowrap;width:max-content;
+  animation:mq 26s linear infinite;
+}
+.mq-track span{font-family:var(--fd);font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.mq-track .dot{color:var(--accent2)}
+
+/* ══════════════════════════════════════
+   SECTION BASE
+══════════════════════════════════════ */
+.sw{padding:5.5rem 2.4rem}
+.s-label{font-size:.6rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--accent2);margin-bottom:.9rem}
+.s-title{font-family:var(--fd);font-size:clamp(2rem,8vw,3.8rem);font-weight:800;line-height:1;letter-spacing:-.01em}
+
+/* ══════════════════════════════════════
+   ABOUT
+══════════════════════════════════════ */
+#about{background:var(--bg2)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;margin-top:3.5rem}
+.bio{font-size:.88rem;font-weight:300;line-height:1.95;color:rgba(240,237,232,0.62);margin-top:1.2rem}
+.bio strong{color:var(--text);font-weight:500}
+.stat-row{display:flex;gap:0;margin-top:2.5rem;border:1px solid var(--border)}
+.stat-item{flex:1;padding:1.2rem .7rem;border-right:1px solid var(--border);text-align:center}
+.stat-item:last-child{border-right:none}
+.stat-n{font-family:var(--fd);font-size:2rem;font-weight:800;color:var(--accent);letter-spacing:-.01em}
+.stat-l{font-size:.55rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:3px}
+.cl-label{font-size:.58rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:1.2rem}
+.cl-grid{display:flex;flex-wrap:wrap;gap:6px}
+.cl-pill{
+  font-size:.6rem;font-weight:500;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--border);padding:5px 11px;
+  transition:border-color .18s,color .18s;
+}
+.sw-label{font-size:.56rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:.8rem;margin-top:2rem}
+.sw-list{display:flex;flex-wrap:wrap;gap:6px}
+.sw-item{
+  font-family:var(--fd);font-size:.7rem;font-weight:700;letter-spacing:.09em;
+  color:var(--accent);padding:5px 10px;
+  background:rgba(232,213,163,0.05);border:1px solid rgba(232,213,163,0.14);
+}
+.social-links{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:1.6rem}
+.social-link{
+  display:inline-flex;align-items:center;gap:.42rem;
+  font-size:.6rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);text-decoration:none;border:1px solid var(--border);
+  padding:7px 14px;transition:border-color .18s,color .18s;touch-action:manipulation;
+}
+.social-link:hover,.social-link:active{border-color:rgba(255,255,255,0.2);color:var(--text)}
+.social-link svg{opacity:.6;flex-shrink:0}
+
+/* ══════════════════════════════════════
+   WORK GRID
+══════════════════════════════════════ */
+#work{background:var(--bg)}
+.work-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-top:2.5rem}
+.wc{
+  position:relative;overflow:hidden;background:var(--bg3);
+  aspect-ratio:16/10;cursor:none;touch-action:manipulation;
+}
+.wc.wide{grid-column:span 2;aspect-ratio:21/9}
+.wc.tall{aspect-ratio:4/5}
+.wc-bg{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  transition:transform .85s cubic-bezier(.16,1,.3,1);
+}
+.wc:hover .wc-bg,.wc:active .wc-bg{transform:scale(1.06)}
+.v1{background:radial-gradient(ellipse at 30% 60%,#1c1408,#080808 70%)}
+.v2{background:radial-gradient(ellipse at 70% 30%,#0d1618,#080808 70%)}
+.v3{background:radial-gradient(ellipse at 50% 50%,#130e1c,#080808 70%)}
+.v4{background:radial-gradient(ellipse at 20% 80%,#0f1308,#080808 70%)}
+.v6{background:radial-gradient(ellipse at 40% 40%,#081318,#080808 70%)}
+.wc-glyph{font-family:var(--fd);font-size:clamp(3rem,7vw,9rem);font-weight:800;color:rgba(255,255,255,0.04);letter-spacing:-.02em;user-select:none}
+.wc-info{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,0.94),rgba(0,0,0,0) 52%);
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:1.4rem 1.6rem;opacity:0;transition:opacity .32s;
+}
+.wc:hover .wc-info,.wc-info.always-show{opacity:1}
+.wc-tag{font-size:.55rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--accent2);margin-bottom:.3rem}
+.wc-title{font-family:var(--fd);font-size:clamp(1rem,2.8vw,1.9rem);font-weight:800;color:var(--text);letter-spacing:-.01em;line-height:1.1}
+.wc-desc{font-size:.68rem;font-weight:300;color:rgba(255,255,255,0.45);margin-top:.22rem;line-height:1.5}
+.wc-num{position:absolute;top:.9rem;right:1rem;font-size:.55rem;font-weight:500;letter-spacing:.1em;color:var(--dim)}
+.wc-badge{
+  position:absolute;top:.9rem;left:1rem;
+  font-size:.5rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  padding:3px 8px;border:1px solid var(--border);color:var(--dim);background:rgba(8,8,8,0.6);
+}
+.wc-enter{
+  position:absolute;bottom:1.2rem;right:1.2rem;
+  width:34px;height:34px;border:1px solid rgba(232,213,163,0.3);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:scale(.85);transition:opacity .3s,transform .3s;
+}
+.wc:hover .wc-enter,.wc-enter.always-show{opacity:1;transform:scale(1)}
+
+/* ══════════════════════════════════════
+   WORK PANEL
+══════════════════════════════════════ */
+#work-panel{
+  position:fixed;inset:0;z-index:5000;background:var(--bg);
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;
+  transform:translateY(18px);
+  transition:opacity .45s cubic-bezier(.16,1,.3,1),transform .45s cubic-bezier(.16,1,.3,1);
+  overflow:hidden;
+}
+#work-panel.open{opacity:1;pointer-events:all;transform:none}
+.wp-header{
+  flex-shrink:0;position:relative;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.2rem 2rem;
+  padding-top:calc(var(--safe-top) + 1rem);
+  border-bottom:1px solid var(--border);
+  background:rgba(8,8,8,0.95);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.wp-back{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-size:.62rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);background:none;border:1px solid var(--border);
+  padding:.6rem 1.2rem;cursor:none;transition:color .2s,border-color .2s;
+  touch-action:manipulation;font-family:var(--fb);
+  min-height:44px;/* iOS min touch target */
+}
+.wp-back:hover,.wp-back:active{color:var(--text);border-color:rgba(255,255,255,0.18)}
+.wp-cat{
+  font-family:var(--fd);font-size:.68rem;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--accent2);text-align:center;flex:1;padding:0 .8rem;
+}
+.wp-body{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;
+}
+.wp-title-area{
+  padding:2.8rem 2rem 1.6rem;
+  flex-shrink:0;
+}
+.wp-title{
+  font-family:var(--fd);font-size:clamp(2rem,7vw,4.5rem);
+  font-weight:800;line-height:.95;letter-spacing:-.02em;margin-bottom:.7rem;
+}
+.wp-subtitle{
+  font-size:.84rem;font-weight:300;color:var(--muted);line-height:1.75;max-width:560px;
+}
+.wp-videos{
+  padding:0 2px 2px;
+  display:grid;gap:2px;
+  flex-shrink:0;
+}
+.wp-videos.two-col{grid-template-columns:1fr 1fr}
+.wp-videos.one-col{grid-template-columns:1fr}
+.wp-video-slot{
+  position:relative;background:var(--bg3);
+  overflow:hidden;
+  min-height:260px;
+}
+.wp-video-slot video{
+  width:100%;height:100%;object-fit:cover;display:block;
+  opacity:.75;transition:opacity .4s;
+}
+.wp-video-slot:hover video{opacity:.9}
+.wp-video-label{
+  position:absolute;bottom:1rem;left:1.2rem;
+  font-size:.55rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(255,255,255,0.32);pointer-events:none;
+}
+.wp-video-placeholder{
+  width:100%;height:100%;min-height:280px;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:.9rem;
+}
+.ph-glyph{
+  font-family:var(--fd);font-size:clamp(2.5rem,8vw,6rem);font-weight:800;
+  color:rgba(255,255,255,0.04);
+}
+.ph-label{
+  font-size:.58rem;letter-spacing:.26em;text-transform:uppercase;color:var(--dim);
+}
+.wp-play-ring{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.85);
+  width:54px;height:54px;border:1px solid rgba(232,213,163,0.22);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;
+}
+.wp-video-slot:hover .wp-play-ring{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+/* ══════════════════════════════════════
+   CRAFT
+══════════════════════════════════════ */
+#craft{background:var(--bg3)}
+.spec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:2.5rem}
+.spec-item{
+  padding:2rem 1.5rem;border:1px solid var(--border);
+  position:relative;overflow:hidden;transition:background .28s,border-color .28s;
+}
+.spec-item::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(to right,transparent,var(--accent2),transparent);
+  transform:scaleX(0);transition:transform .38s;
+}
+.spec-item:hover{background:rgba(232,213,163,0.03);border-color:rgba(232,213,163,0.1)}
+.spec-item:hover::after{transform:scaleX(1)}
+.spec-n{font-family:var(--fd);font-size:2.2rem;font-weight:800;color:rgba(255,255,255,0.04);margin-bottom:.7rem;letter-spacing:-.02em}
+.spec-name{font-family:var(--fd);font-size:.95rem;font-weight:700;letter-spacing:.02em;color:var(--text);margin-bottom:.45rem}
+.spec-desc{font-size:.76rem;font-weight:300;line-height:1.7;color:var(--muted)}
+
+/* ══════════════════════════════════════
+   CONTACT
+══════════════════════════════════════ */
+#contact{
+  background:var(--bg);padding:7rem 2.4rem;
+  padding-bottom:calc(5rem + var(--safe-bot));
+  text-align:center;position:relative;overflow:hidden;
+}
+.ct-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:280px;background:radial-gradient(ellipse,rgba(196,169,107,0.055),transparent 70%);pointer-events:none}
+.ct-head{font-family:var(--fd);font-size:clamp(3rem,12vw,7rem);font-weight:800;line-height:.94;letter-spacing:-.02em;margin-bottom:2.2rem}
+.ct-head .gh{color:var(--accent);-webkit-text-stroke:0}
+.ct-btns{display:flex;justify-content:center;gap:.9rem;flex-wrap:wrap;margin-bottom:3rem}
+.btn-p{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-size:.7rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  padding:.9rem 2rem;background:var(--accent);color:#080808;text-decoration:none;
+  transition:background .2s;touch-action:manipulation;min-height:48px;
+}
+.btn-p:hover,.btn-p:active{background:var(--accent2)}
+.btn-g{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-size:.7rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  padding:.9rem 2rem;border:1px solid var(--border);color:var(--text);text-decoration:none;
+  transition:border-color .2s,background .2s;touch-action:manipulation;min-height:48px;
+}
+.btn-g:hover,.btn-g:active{border-color:rgba(255,255,255,0.16);background:var(--surface)}
+.ct-details{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:1.6rem 2rem;padding-top:2rem;border-top:1px solid var(--border);
+  text-align:left;max-width:480px;margin:0 auto;
+}
+.ct-item .cl{font-size:.54rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:.26rem}
+.ct-item .cv{font-family:var(--fd);font-size:.88rem;font-weight:700;letter-spacing:.04em;color:var(--text)}
+.ct-item .cv a{color:inherit;text-decoration:none;touch-action:manipulation}
+.ct-item .cv a:hover,.ct-item .cv a:active{color:var(--accent)}
+
+footer{
+  padding:1.4rem 2.4rem;padding-bottom:calc(1.4rem + var(--safe-bot));
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid var(--border);background:var(--bg);
+  flex-wrap:wrap;gap:.4rem;
+}
+footer span{font-size:.6rem;color:var(--dim);letter-spacing:.06em}
+
+/* ══════════════════════════════════════
+   REVEAL ANIMATIONS
+══════════════════════════════════════ */
+.sr{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.sr.v{opacity:1;transform:none}
+.sl{opacity:0;transform:translateX(-32px);transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1)}
+.sl.v{opacity:1;transform:none}
+.sr2{opacity:0;transform:translateX(32px);transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1)}
+.sr2.v{opacity:1;transform:none}
+.d1{transition-delay:.07s}.d2{transition-delay:.14s}.d3{transition-delay:.22s}
+.d4{transition-delay:.3s}.d5{transition-delay:.38s}.d6{transition-delay:.46s}
+@keyframes up{to{opacity:1;transform:none}}
+@keyframes fi{to{opacity:1}}
+@keyframes tick{
+  0%{transform:scaleY(0);transform-origin:top}
+  50%{transform:scaleY(1);transform-origin:top}
+  51%{transform:scaleY(1);transform-origin:bottom}
+  100%{transform:scaleY(0);transform-origin:bottom}
+}
+@keyframes mq{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ══════════════════════════════════════
+   AMBIENT CANVAS
+══════════════════════════════════════ */
+#ambient-canvas{
+  position:fixed;inset:0;pointer-events:none;z-index:1;
+  mix-blend-mode:screen;opacity:1;
+}
+
+/* ══════════════════════════════════════
+   MOBILE — ≤ 768px
+══════════════════════════════════════ */
+@media(max-width:768px){
+  /* cursor off */
+  body{cursor:auto}
+  .cur-dot,.cur-ring{display:none}
+
+  /* nav — single row, tighter */
+  nav{padding:1rem 1.4rem;padding-top:calc(var(--safe-top) + .9rem)}
+  .nav-logo{font-size:.78rem}
+  .nav-links{gap:1.2rem}
+  .nav-links a{font-size:.62rem;letter-spacing:.1em}
+
+  /* hero */
+  #hero{padding:0 1.4rem 3.5rem;padding-bottom:calc(3.5rem + var(--safe-bot))}
+  .hero-eye{font-size:.6rem;letter-spacing:.2em}
+  .hero-sub{margin-top:2rem;gap:1.4rem}
+  .hero-role{font-size:.84rem}
+
+  /* sections */
+  .sw{padding:4rem 1.4rem}
+
+  /* about — single column */
+  .about-grid{grid-template-columns:1fr;gap:2.8rem;margin-top:2.5rem}
+  .stat-row{margin-top:2rem}
+  .stat-n{font-size:1.7rem}
+  .stat-item{padding:1rem .6rem}
+  .social-links{margin-top:1.4rem}
+
+  /* work grid — single column */
+  .work-grid{grid-template-columns:1fr;gap:2px;margin-top:2rem}
+  .wc.wide{grid-column:span 1;aspect-ratio:16/9}
+  .wc.tall{aspect-ratio:16/9}
+  .wc{aspect-ratio:16/9}
+  /* always show info on mobile (no hover) */
+  .wc-info{opacity:1;background:linear-gradient(to top,rgba(0,0,0,.88),rgba(0,0,0,0) 50%)}
+  .wc-enter{opacity:1;transform:scale(1)}
+  .wc-title{font-size:1.15rem}
+  .wc-tag{font-size:.52rem}
+  .wc-desc{font-size:.65rem}
+
+  /* work panel */
+  #work-panel{transform:translateY(100%);transition:opacity .35s ease,transform .4s cubic-bezier(.16,1,.3,1)}
+  #work-panel.open{transform:none}
+  .wp-header{padding:1rem 1.2rem;padding-top:calc(var(--safe-top) + .85rem)}
+  .wp-cat{font-size:.6rem;letter-spacing:.14em}
+  .wp-back{font-size:.58rem;padding:.55rem .9rem;min-height:44px}
+  .wp-title-area{padding:1.8rem 1.2rem 1.2rem}
+  .wp-title{font-size:clamp(1.7rem,8vw,3rem)}
+  .wp-subtitle{font-size:.8rem}
+  /* stack videos on mobile */
+  .wp-videos.two-col{grid-template-columns:1fr}
+  .wp-video-slot{min-height:220px}
+  .wp-video-placeholder{min-height:220px}
+  /* show play ring always on mobile */
+  .wp-play-ring{opacity:.6;transform:translate(-50%,-50%) scale(1)}
+
+  /* craft — single column */
+  .spec-grid{grid-template-columns:1fr;gap:2px;margin-top:2rem}
+  .spec-item{padding:1.6rem 1.2rem}
+  .spec-n{font-size:1.8rem}
+  .spec-name{font-size:.9rem}
+
+  /* contact */
+  #contact{padding:5rem 1.4rem;padding-bottom:calc(4rem + var(--safe-bot))}
+  .ct-head{font-size:clamp(2.6rem,13vw,5rem)}
+  .ct-details{grid-template-columns:1fr 1fr;gap:1.2rem 1rem;max-width:100%}
+  .ct-item .cv{font-size:.82rem}
+  .btn-p,.btn-g{width:100%;justify-content:center;padding:.9rem 1.2rem}
+  .ct-btns{flex-direction:column;align-items:center;gap:.7rem}
+
+  footer{padding:1.2rem 1.4rem;padding-bottom:calc(1.2rem + var(--safe-bot));justify-content:center;text-align:center}
+}
+
+/* ── tiny phones ≤ 380px ── */
+@media(max-width:380px){
+  .nav-links{gap:.8rem}
+  .nav-links a{font-size:.56rem}
+  .hero-name{font-size:clamp(2.8rem,16vw,4.5rem)}
+  .ct-details{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<canvas id="ambient-canvas"></canvas>
+<div class="cur-dot" id="curDot"></div>
+<div class="cur-ring" id="curRing"></div>
+
+<!-- ── INTRO SCREEN ── -->
+<div id="intro-screen">
+  <video id="intro-video" autoplay muted loop playsinline webkit-playsinline x5-video-player-type="h5">
+    <source src="02177773943437200000000000000000000ffffc0a8786f1de409.mp4" type="video/mp4">
+  </video>
+  <div class="intro-overlay">
+    <div class="intro-ring">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 8h12M9 3l5 5-5 5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="intro-click-hint">Tap to Enter</span>
+  </div>
+</div>
+
+<!-- ── WORK DETAIL PANEL ── -->
+<div id="work-panel" role="dialog" aria-modal="true">
+  <div class="wp-header">
+    <button class="wp-back" id="wp-back-btn" aria-label="Back to portfolio">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M10 6H2M5 2L1 6l4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back
+    </button>
+    <span class="wp-cat" id="wp-cat-label"></span>
+    <div style="width:80px"></div>
+  </div>
+  <div class="wp-body">
+    <div class="wp-title-area">
+      <h2 class="wp-title" id="wp-title"></h2>
+      <p class="wp-subtitle" id="wp-subtitle"></p>
+    </div>
+    <div class="wp-videos" id="wp-videos-grid"></div>
+  </div>
+</div>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="nav-logo" href="#hero">MD</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#craft">Craft</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <p class="hero-eye">3D · VFX · Motion — 6 Years</p>
+  <h1 class="hero-name">Mohamed<br><span class="ghost">Darwish</span></h1>
+  <div class="hero-sub">
+    <p class="hero-role">
+      <strong>3D VFX Artist</strong> crafting cinematic worlds —<br>
+      Hollywood productions, global brand campaigns &amp; music videos.<br>
+      <span style="color:var(--dim);font-size:.78rem;display:block;margin-top:.4rem">Based in Doha, Qatar</span>
+    </p>
+    <a class="hero-cta" href="#work">Explore Work →</a>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-tick"></div>
+  </div>
+</section>
+
+<!-- ── MARQUEE ── -->
+<div class="mq-wrap">
+  <div class="mq-track">
+    <span>Samsung</span><span class="dot">✦</span><span>Netflix</span><span class="dot">✦</span>
+    <span>Spotify</span><span class="dot">✦</span><span>EA Games</span><span class="dot">✦</span>
+    <span>Hoka</span><span class="dot">✦</span><span>Gentle Monster</span><span class="dot">✦</span>
+    <span>Oppo</span><span class="dot">✦</span><span>Saudi Vision 2030</span><span class="dot">✦</span>
+    <span>Copia Group</span><span class="dot">✦</span><span>Central Cee</span><span class="dot">✦</span>
+    <span>Jorja Smith</span><span class="dot">✦</span><span>Lil Tjay</span><span class="dot">✦</span>
+    <span>Samsung</span><span class="dot">✦</span><span>Netflix</span><span class="dot">✦</span>
+    <span>Spotify</span><span class="dot">✦</span><span>EA Games</span><span class="dot">✦</span>
+    <span>Hoka</span><span class="dot">✦</span><span>Gentle Monster</span><span class="dot">✦</span>
+    <span>Oppo</span><span class="dot">✦</span><span>Saudi Vision 2030</span><span class="dot">✦</span>
+    <span>Copia Group</span><span class="dot">✦</span><span>Central Cee</span><span class="dot">✦</span>
+    <span>Jorja Smith</span><span class="dot">✦</span><span>Lil Tjay</span><span class="dot">✦</span>
+  </div>
+</div>
+
+<!-- ── ABOUT ── -->
+<section id="about" class="sw">
+  <div class="sr"><p class="s-label">About</p></div>
+  <div class="about-grid">
+    <div class="sl">
+      <h2 class="s-title">Six years.<br>Every frame<br>intentional.</h2>
+      <p class="bio">I'm <strong>Mohamed Darwish</strong> — a 3D VFX Artist based in Doha, Qatar, specialising in cinematic visual effects, 3D simulation, photorealistic rendering, and motion design.</p>
+      <p class="bio">My work spans <strong>Indian feature films</strong>, global ad campaigns for brands like <strong>Samsung, Netflix and EA</strong>, music videos for artists including <strong>Central Cee, Jorja Smith and Lil Tjay</strong>, and large-scale event visuals across the Middle East.</p>
+      <p class="bio">I've contributed visuals for <strong>Copia Group of Companies</strong> on LNG 2026 Qatar — a landmark energy event in the region — working under a creative director on 3D modelling and visual production.</p>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-n">6+</div><div class="stat-l">Years</div></div>
+        <div class="stat-item"><div class="stat-n">50+</div><div class="stat-l">Projects</div></div>
+        <div class="stat-item"><div class="stat-n">3</div><div class="stat-l">Films</div></div>
+        <div class="stat-item"><div class="stat-n">15+</div><div class="stat-l">Brands</div></div>
+      </div>
+    </div>
+    <div class="sr2">
+      <div class="cl-label">Notable Clients & Collaborations</div>
+      <div class="cl-grid">
+        <span class="cl-pill">Samsung</span><span class="cl-pill">Netflix</span>
+        <span class="cl-pill">Spotify</span><span class="cl-pill">EA Games</span>
+        <span class="cl-pill">Hoka</span><span class="cl-pill">Gentle Monster</span>
+        <span class="cl-pill">Oppo</span><span class="cl-pill">Snipes USA</span>
+        <span class="cl-pill">Saudi Vision 2030</span><span class="cl-pill">Copia Group</span>
+        <span class="cl-pill">JAC Qatar</span><span class="cl-pill">Mazda Qatar</span>
+        <span class="cl-pill">Central Cee</span><span class="cl-pill">Jorja Smith</span>
+        <span class="cl-pill">Lil Tjay</span><span class="cl-pill">Madisson Beer</span>
+        <span class="cl-pill">Eladio Carrión</span><span class="cl-pill">Manjumal Boys</span>
+        <span class="cl-pill">King of Kotha</span><span class="cl-pill">RDX</span>
+      </div>
+      <div class="sw-label">Software & Tools</div>
+      <div class="sw-list">
+        <span class="sw-item">Blender</span><span class="sw-item">After Effects</span>
+        <span class="sw-item">Premiere Pro</span><span class="sw-item">Photoshop</span>
+        <span class="sw-item">Illustrator</span><span class="sw-item">Embergen</span>
+        <span class="sw-item">PF Track</span>
+      </div>
+      <div class="social-links">
+        <a class="social-link" href="https://www.instagram.com/_drweesh/" target="_blank" rel="noopener">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+          </svg>
+          Instagram
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── WORK ── -->
+<section id="work" class="sw" style="padding-bottom:0">
+  <div class="sr"><p class="s-label">Selected Work</p></div>
+  <div class="sr d1"><h2 class="s-title">The Work</h2></div>
+  <div class="work-grid">
+
+    <div class="wc wide sr" data-work="cinema">
+      <div class="wc-bg v1"><div class="wc-glyph">FILM</div></div>
+      <div class="wc-info">
+        <p class="wc-tag">VFX · Indian Cinema</p>
+        <h3 class="wc-title">VFX · Indian Cinema</h3>
+        <p class="wc-desc">Compositing, 3D simulation & environment creation</p>
+      </div>
+      <span class="wc-num">01</span><span class="wc-badge">Cinema</span>
+      <div class="wc-enter">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="rgba(232,213,163,0.8)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div class="wc sr d1" data-work="cgi">
+      <div class="wc-bg v2"><div class="wc-glyph">CGI</div></div>
+      <div class="wc-info">
+        <p class="wc-tag">CGI · Brand Campaign</p>
+        <h3 class="wc-title">CGI · Brand Campaign</h3>
+        <p class="wc-desc">Product CGI & motion for global launches</p>
+      </div>
+      <span class="wc-num">02</span><span class="wc-badge">Commercial</span>
+      <div class="wc-enter">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="rgba(232,213,163,0.8)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div class="wc sr d2" data-work="music">
+      <div class="wc-bg v3"><div class="wc-glyph">MV</div></div>
+      <div class="wc-info">
+        <p class="wc-tag">VFX · Music Artists</p>
+        <h3 class="wc-title">VFX · Music Artists</h3>
+        <p class="wc-desc">Real-time VFX & 3D environments</p>
+      </div>
+      <span class="wc-num">03</span><span class="wc-badge">Music</span>
+      <div class="wc-enter">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="rgba(232,213,163,0.8)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div class="wc sr d3" data-work="3d">
+      <div class="wc-bg v4"><div class="wc-glyph">3D</div></div>
+      <div class="wc-info">
+        <p class="wc-tag">3D Modelling</p>
+        <h3 class="wc-title">3D Modelling</h3>
+        <p class="wc-desc">Photorealistic product & environment modelling</p>
+      </div>
+      <span class="wc-num">04</span><span class="wc-badge">3D</span>
+      <div class="wc-enter">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="rgba(232,213,163,0.8)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div class="wc wide sr d4" data-work="social">
+      <div class="wc-bg v6"><div class="wc-glyph">AUTO</div></div>
+      <div class="wc-info">
+        <p class="wc-tag">Social Media · Automotive</p>
+        <h3 class="wc-title">Social Media · Automotive</h3>
+        <p class="wc-desc">High-impact social content, editing & motion graphics</p>
+      </div>
+      <span class="wc-num">05</span><span class="wc-badge">Automotive</span>
+      <div class="wc-enter">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="rgba(232,213,163,0.8)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── CRAFT ── -->
+<section id="craft" class="sw">
+  <div class="sr"><p class="s-label">Craft</p></div>
+  <div class="sr d1"><h2 class="s-title">What I Do</h2></div>
+  <div class="spec-grid">
+    <div class="spec-item sr d1"><div class="spec-n">01</div><div class="spec-name">3D VFX & Simulation</div><p class="spec-desc">Fluid, fire, destruction and particle simulations using Blender & Embergen. Built for film and commercial pipelines.</p></div>
+    <div class="spec-item sr d2"><div class="spec-n">02</div><div class="spec-name">3D Modelling & Rendering</div><p class="spec-desc">Photorealistic product and environment modelling with cinematic lighting. From concept to deliverable.</p></div>
+    <div class="spec-item sr d3"><div class="spec-n">03</div><div class="spec-name">Motion & Compositing</div><p class="spec-desc">After Effects compositing, PF Track camera matching, and seamless VFX integration into live-action footage.</p></div>
+    <div class="spec-item sr d1"><div class="spec-n">04</div><div class="spec-name">Music Video VFX</div><p class="spec-desc">Creative visual effects for music artists — real-time VFX, 3D environments and motion-integrated compositing.</p></div>
+    <div class="spec-item sr d2"><div class="spec-n">05</div><div class="spec-name">Brand & Commercial CGI</div><p class="spec-desc">CGI campaigns for global brands — storytelling through pure CG imagery and motion.</p></div>
+    <div class="spec-item sr d3"><div class="spec-n">06</div><div class="spec-name">Social Media & Editing</div><p class="spec-desc">High-impact social content and video editing. Premiere Pro · Photoshop · Illustrator.</p></div>
+  </div>
+</section>
+
+<!-- ── CONTACT ── -->
+<section id="contact">
+  <div class="ct-glow"></div>
+  <h2 class="ct-head sr d1">Let's build<br><span class="gh">something</span><br>real.</h2>
+  <div class="ct-btns sr d2">
+    <a class="btn-p" href="https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox?compose=CllgCJNsLZdZPnSMVSnwnvvmJVRmWwNRdLDLgpsfgDNqdXncfxlsSLrVLfRvrlDQCSVCnDsdsZg" target="_blank" rel="noopener">Email Me →</a>
+    <a class="btn-g" href="https://wa.me/97433339124" target="_blank" rel="noopener">WhatsApp →</a>
+  </div>
+  <div class="ct-details sr d3">
+    <div class="ct-item"><div class="cl">Email</div><div class="cv"><a href="https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox?compose=CllgCJNsLZdZPnSMVSnwnvvmJVRmWwNRdLDLgpsfgDNqdXncfxlsSLrVLfRvrlDQCSVCnDsdsZg" target="_blank" rel="noopener">iamdarwish16@gmail.com</a></div></div>
+    <div class="ct-item"><div class="cl">WhatsApp</div><div class="cv"><a href="https://wa.me/97433339124" target="_blank" rel="noopener">+974 3333 9124</a></div></div>
+    <div class="ct-item"><div class="cl">Instagram</div><div class="cv"><a href="https://www.instagram.com/_drweesh/" target="_blank" rel="noopener">@_drweesh</a></div></div>
+    <div class="ct-item"><div class="cl">Location</div><div class="cv">Doha, Qatar</div></div>
+  </div>
+</section>
+
+<footer>
+  <span>© 2025 Mohamed Darwish</span>
+  <span>3D · VFX · Motion · Doha, Qatar</span>
+</footer>
+
+<script>
+/* ════════════════════════
+   DEVICE DETECTION
+════════════════════════ */
+const isMobile = () => window.matchMedia('(max-width:768px)').matches || ('ontouchstart' in window);
+
+/* ════════════════════════
+   INTRO SCREEN
+════════════════════════ */
+const introScreen = document.getElementById('intro-screen');
+
+function enterSite() {
+  introScreen.classList.add('leaving');
+  setTimeout(() => { introScreen.style.display = 'none'; }, 920);
+}
+
+let entered = false;
+introScreen.addEventListener('click', () => { if(!entered){entered=true;enterSite();} });
+introScreen.addEventListener('touchend', e => { e.preventDefault(); if(!entered){entered=true;enterSite();} }, {passive:false});
+
+/* ════════════════════════
+   WORK PANEL DATA
+════════════════════════ */
+const workData = {
+  cinema:{
+    cat:'VFX · Indian Cinema',
+    title:'VFX · Indian Cinema',
+    subtitle:'Compositing, 3D simulation and environment creation for Indian feature productions. Seamless VFX integration into live-action footage using Blender, After Effects and PF Track.',
+    slots:[
+      {label:'Film VFX — Simulation',   glyph:'FILM', grad:'radial-gradient(ellipse at 30% 60%,#2a1e08,#080808 70%)'},
+      {label:'Film VFX — Compositing',  glyph:'VFX',  grad:'radial-gradient(ellipse at 70% 40%,#1c1408,#080808 70%)'}
+    ]
+  },
+  cgi:{
+    cat:'CGI · Brand Campaign',
+    title:'CGI · Brand Campaign',
+    subtitle:'Product CGI and motion for global brands — photorealistic renders, product launches and commercial storytelling through pure CG imagery.',
+    slots:[
+      {label:'Product CGI',  glyph:'CGI',  grad:'radial-gradient(ellipse at 25% 70%,#0d1618,#080808 70%)'},
+      {label:'Brand Motion', glyph:'BRND', grad:'radial-gradient(ellipse at 75% 30%,#0a1214,#080808 70%)'}
+    ]
+  },
+  music:{
+    cat:'VFX · Music Artists',
+    title:'VFX · Music Artists',
+    subtitle:'Real-time visual effects and 3D environment creation for music video productions. High-energy compositing and motion-integrated VFX.',
+    slots:[
+      {label:'VFX — Environment', glyph:'MV', grad:'radial-gradient(ellipse at 50% 50%,#130e1c,#080808 70%)'},
+      {label:'VFX — Motion',      glyph:'FX', grad:'radial-gradient(ellipse at 30% 30%,#0e0a18,#080808 70%)'}
+    ]
+  },
+  '3d':{
+    cat:'3D Modelling',
+    title:'3D Modelling',
+    subtitle:'Photorealistic product and environment modelling with cinematic lighting. From concept to final deliverable — Blender-based workflows for brands and events.',
+    slots:[
+      {label:'3D Product',     glyph:'3D',  grad:'radial-gradient(ellipse at 20% 80%,#0f1308,#080808 70%)'},
+      {label:'3D Environment', glyph:'ENV', grad:'radial-gradient(ellipse at 80% 20%,#0d140a,#080808 70%)'}
+    ]
+  },
+  social:{
+    cat:'Social Media · Automotive',
+    title:'Social Media · Automotive',
+    subtitle:'High-impact social content, video editing and motion graphics for automotive brands. Crafted for performance across all digital platforms.',
+    slots:[
+      {label:'Social — Edit',   glyph:'SOC',  grad:'radial-gradient(ellipse at 40% 40%,#081318,#080808 70%)'},
+      {label:'Social — Motion', glyph:'AUTO', grad:'radial-gradient(ellipse at 60% 60%,#060f10,#080808 70%)'}
+    ]
+  }
+};
+
+/* ════════════════════════
+   WORK PANEL UI
+════════════════════════ */
+const panel     = document.getElementById('work-panel');
+const wpCat     = document.getElementById('wp-cat-label');
+const wpTitle   = document.getElementById('wp-title');
+const wpSub     = document.getElementById('wp-subtitle');
+const wpGrid    = document.getElementById('wp-videos-grid');
+const wpBackBtn = document.getElementById('wp-back-btn');
+
+function buildSlot(slot) {
+  const div = document.createElement('div');
+  div.className = 'wp-video-slot';
+
+  const ph = document.createElement('div');
+  ph.className = 'wp-video-placeholder';
+  ph.style.background = slot.grad;
+
+  const g = document.createElement('div');
+  g.className = 'ph-glyph';
+  g.textContent = slot.glyph;
+
+  const l = document.createElement('div');
+  l.className = 'ph-label';
+  l.textContent = 'Video Coming Soon';
+
+  ph.appendChild(g); ph.appendChild(l);
+  div.appendChild(ph);
+
+  const pr = document.createElement('div');
+  pr.className = 'wp-play-ring';
+  pr.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 2.5l7 4.5-7 4.5V2.5z" fill="rgba(232,213,163,0.6)"/></svg>`;
+  div.appendChild(pr);
+
+  const vl = document.createElement('div');
+  vl.className = 'wp-video-label';
+  vl.textContent = slot.label;
+  div.appendChild(vl);
+
+  return div;
+}
+
+function openPanel(key) {
+  const d = workData[key]; if (!d) return;
+  wpCat.textContent   = d.cat;
+  wpTitle.textContent = d.title;
+  wpSub.textContent   = d.subtitle;
+  wpGrid.innerHTML    = '';
+  wpGrid.className    = 'wp-videos ' + (d.slots.length >= 2 && !isMobile() ? 'two-col' : 'one-col');
+  d.slots.forEach(s => wpGrid.appendChild(buildSlot(s)));
+  panel.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePanel() {
+  panel.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { wpGrid.innerHTML = ''; }, 480);
+}
+
+wpBackBtn.addEventListener('click', closePanel);
+wpBackBtn.addEventListener('touchend', e => { e.preventDefault(); closePanel(); }, {passive:false});
+
+// close on ESC
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closePanel(); });
+
+document.querySelectorAll('.wc[data-work]').forEach(card => {
+  // unified handler — prevents double-fire on mobile
+  let tapped = false;
+  card.addEventListener('touchend', e => {
+    e.preventDefault();
+    if(tapped) return; tapped = true;
+    setTimeout(()=>{ tapped=false; }, 400);
+    openPanel(card.dataset.work);
+  }, {passive:false});
+  card.addEventListener('click', e => {
+    if(tapped) return;
+    openPanel(card.dataset.work);
+  });
+});
+
+/* ════════════════════════
+   AMBIENT LIGHT
+════════════════════════ */
+const canvas = document.getElementById('ambient-canvas');
+const ctx    = canvas.getContext('2d');
+
+const light = { x:innerWidth/2, y:innerHeight/2, tx:innerWidth/2, ty:innerHeight/2 };
+const bursts = [];
+
+function resizeCanvas(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+document.addEventListener('mousemove', e => { light.tx=e.clientX; light.ty=e.clientY; });
+document.addEventListener('touchmove', e => {
+  const t=e.touches[0]; light.tx=t.clientX; light.ty=t.clientY;
+},{passive:true});
+
+function spawnBurst(x,y){
+  bursts.push({x,y,maxR:180+Math.random()*120,alpha:.52,born:performance.now()});
+}
+document.addEventListener('click',      e => spawnBurst(e.clientX,e.clientY));
+document.addEventListener('touchstart', e => { const t=e.touches[0]; spawnBurst(t.clientX,t.clientY); },{passive:true});
+
+const orb2={x:innerWidth*.7,y:innerHeight*.3,vx:.18,vy:.12};
+
+function drawFrame(now){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  light.x += (light.tx-light.x)*.06;
+  light.y += (light.ty-light.y)*.06;
+  orb2.x += orb2.vx; orb2.y += orb2.vy;
+  if(orb2.x<0||orb2.x>canvas.width)  orb2.vx*=-1;
+  if(orb2.y<0||orb2.y>canvas.height) orb2.vy*=-1;
+
+  const g1=ctx.createRadialGradient(light.x,light.y,0,light.x,light.y,340);
+  g1.addColorStop(0,'rgba(196,169,107,0.055)');
+  g1.addColorStop(.45,'rgba(180,140,80,0.022)');
+  g1.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g1; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  const g2=ctx.createRadialGradient(orb2.x,orb2.y,0,orb2.x,orb2.y,260);
+  g2.addColorStop(0,'rgba(160,180,210,0.028)');
+  g2.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g2; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  for(let i=bursts.length-1;i>=0;i--){
+    const b=bursts[i];
+    const age=(now-b.born)/700;
+    if(age>=1){bursts.splice(i,1);continue;}
+    const r=Math.max(1,b.maxR*(1-Math.pow(1-age,3)));
+    const alpha=b.alpha*(1-age)*(1-age);
+    const gb=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,r);
+    gb.addColorStop(0,`rgba(232,213,163,${alpha*.9})`);
+    gb.addColorStop(.35,`rgba(196,160,90,${alpha*.4})`);
+    gb.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=gb; ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  requestAnimationFrame(drawFrame);
+}
+requestAnimationFrame(drawFrame);
+
+/* ════════════════════════
+   CURSOR — desktop
+════════════════════════ */
+const dot  = document.getElementById('curDot');
+const ring = document.getElementById('curRing');
+let mx=-200,my=-200,rx=-200,ry=-200;
+
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  dot.style.left=mx+'px'; dot.style.top=my+'px';
+});
+(function raf(){
+  rx+=(mx-rx)*.11; ry+=(my-ry)*.11;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(raf);
+})();
+document.querySelectorAll('.wc').forEach(c=>{
+  c.addEventListener('mouseenter',()=>{
+    ring.style.width='56px';ring.style.height='56px';
+    ring.style.borderColor='rgba(232,213,163,0.35)';
+    dot.style.width='12px';dot.style.height='12px';
+  });
+  c.addEventListener('mouseleave',()=>{
+    ring.style.width='38px';ring.style.height='38px';
+    ring.style.borderColor='rgba(255,255,255,0.22)';
+    dot.style.width='6px';dot.style.height='6px';
+  });
+});
+
+/* ════════════════════════
+   SCROLL REVEAL
+════════════════════════ */
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('v'); });
+},{threshold:0.1});
+document.querySelectorAll('.sr,.sl,.sr2').forEach(el=>io.observe(el));
+
+/* ════════════════════════
+   PANEL LAYOUT ON RESIZE
+════════════════════════ */
+window.addEventListener('resize',()=>{
+  if(panel.classList.contains('open')){
+    const key = [...document.querySelectorAll('.wc[data-work]')]
+      .find(c => workData[c.dataset.work]?.title === wpTitle.textContent)?.dataset.work;
+    if(key) wpGrid.className = 'wp-videos ' + (workData[key].slots.length>=2 && !isMobile() ? 'two-col':'one-col');
+  }
+});
+</script>
+</body>
+</html>
